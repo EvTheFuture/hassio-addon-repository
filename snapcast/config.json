@@ -1,6 +1,7 @@
 {
   "name": "Snapcast",
-  "version": "0.8.2",
+  "version": "0.8.3",
+  "image": "ghcr.io/evthefuture/snapcast",
   "init": false,
   "stage": "stable",
   "slug": "snapcast",
