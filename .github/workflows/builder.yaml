@@ -1,0 +1,29 @@
+name: Builder
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "snapcast/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64, armv7, armhf, i386]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.arch }}
+        uses: home-assistant/builder@master
+        with:
+          args: |
+            --target snapcast
+            --arch ${{ matrix.arch }}
+            --docker-hub ghcr.io/EvTheFuture
+            --image-name snapcast
