@@ -1,0 +1,72 @@
+configuration:
+  server:
+    name: Snapcast server
+    description: Runs the Snapcast server that streams audio to connected clients.
+    fields:
+      enable:
+        name: Enable server
+        description: Start the Snapcast server. Turn off to run this instance as a client only.
+      enable_web:
+        name: Enable web interface
+        description: Serve the built-in Snapweb control page on port 1780.
+      enable_stream_librespot:
+        name: Enable Spotify stream
+        description: Expose a Spotify Connect source using librespot.
+      librespot_name:
+        name: Spotify stream name
+        description: Name of the stream as shown in Snapcast clients.
+      librespot_device_name:
+        name: Spotify device name
+        description: Name advertised to Spotify Connect in the Spotify app.
+      librespot_initial_volume:
+        name: Spotify initial volume
+        description: Startup volume in percent, 0 to 100.
+      librespot_bitrate:
+        name: Spotify bitrate
+        description: Streaming bitrate in kbps.
+      librespot_normalize:
+        name: Normalize volume
+        description: Enable Spotify volume normalization.
+      librespot_killall:
+        name: Kill existing librespot
+        description: Terminate any other running librespot instances on start.
+      librespot_disable_audio_cache:
+        name: Disable audio cache
+        description: Do not cache downloaded audio to disk.
+      librespot_params:
+        name: Spotify parameters
+        description: Value passed to the librespot source params option.
+      librespot_extra_params:
+        name: Spotify extra parameters
+        description: Additional key=value pairs appended to the librespot source.
+      enable_stream_airplay:
+        name: Enable AirPlay stream
+        description: Expose an AirPlay source using shairport-sync for streaming from Apple devices.
+      airplay_name:
+        name: AirPlay stream name
+        description: Name of the stream as shown in Snapcast clients.
+      airplay_device_name:
+        name: AirPlay receiver name
+        description: Name shown in the AirPlay picker on your iPhone or Mac.
+      airplay_port:
+        name: AirPlay RTSP port
+        description: RTSP listening port for shairport-sync. Default is 5000.
+      custom_streams:
+        name: Custom streams
+        description: Additional raw snapserver source lines, one per stream.
+  client:
+    name: Snapcast client
+    description: Runs a Snapcast client that plays audio from a server.
+    fields:
+      enable:
+        name: Enable client
+        description: Start the Snapcast client on this instance.
+      host:
+        name: Server host
+        description: Address of the Snapcast server to connect to.
+      port:
+        name: Server port
+        description: Control port of the Snapcast server. Leave empty for the default.
+      extra_params:
+        name: Extra parameters
+        description: Additional command-line arguments passed to snapclient.

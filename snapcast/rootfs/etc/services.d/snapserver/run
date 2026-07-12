@@ -1,0 +1,117 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Home Assistant Community Add-on: Snapcast
+# Starts the Snapcast server if enabled in config
+# ==============================================================================
+config_file="/etc/snapserver.conf"
+
+function rawurlencode() {
+  local string="${1}"
+  local strlen=${#string}
+  local encoded=""
+  local pos c o
+
+  for (( pos=0 ; pos<strlen ; pos++ )); do
+     c=${string:$pos:1}
+     case "$c" in
+        [-_.~a-zA-Z0-9] ) o="${c}" ;;
+        * ) printf -v o '%%%02x' "'$c"
+     esac
+     encoded+="${o}"
+  done
+  echo "${encoded}"    # You can either set a return variable (FASTER)
+}
+
+function getval() {
+    local param="${1}"
+
+    if bashio::config.exists "server.$param" ; then
+    	rawurlencode "$(bashio::config "server.$param")"
+    else
+    	rawurlencode "${PARAMS[$param]}"
+    fi
+}
+
+declare -a options
+declare -a sources
+
+# If Snapcast is disabled, use a fake sleep process
+if ! bashio::config.true 'server.enable'; then
+    bashio::log.info 'Snapcast server not enabled in config...'
+    exec sleep 864000
+fi
+
+bashio::log.info 'Starting the Snapcast server...'
+
+if bashio::config.true 'server.enable_stream_librespot' ; then
+    declare -A PARAMS
+    PARAMS["librespot_name"]="Spotify"
+    PARAMS["librespot_device_name"]="Snapcast"
+    PARAMS["librespot_initial_volume"]="100"
+    PARAMS["librespot_bitrate"]="320"
+    PARAMS["librespot_normalize"]="false"
+    PARAMS["librespot_killall"]="false"
+    PARAMS["librespot_disable_audio_cache"]="false"
+    PARAMS["librespot_params"]=""
+    PARAMS["librespot_extra_params"]=""
+
+    params=""
+    extra_params=""
+
+    bashio::config.has_value "server.librespot_params" && params="&params=$(rawurlencode $(bashio::config server.librespot_params))"
+    bashio::config.has_value "server.librespot_extra_params" && extra_params="&$(bashio::config server.librespot_extra_params)"
+
+    sources+=("source = librespot:///usr/bin/librespot?name=$(getval 'librespot_name')&devicename=$(getval 'librespot_device_name')&bitrate=$(getval 'librespot_bitrate')&volume=$(getval 'librespot_initial_volume')&normalize=$(getval 'librespot_normalize')&disable_audio_cache=$(getval 'librespot_disable_audio_cache')${extra_params}${params}")
+fi
+
+# ------------------------------------------------------------------------------
+# AirPlay (shairport-sync) source
+# Needs D-Bus and Avahi running so the iPhone can discover the receiver
+# ------------------------------------------------------------------------------
+if bashio::config.true 'server.enable_stream_airplay'; then
+    airplay_name="AirPlay"
+    airplay_device_name="Snapcast"
+    airplay_port="5000"
+
+    bashio::config.has_value "server.airplay_name" && airplay_name="$(bashio::config server.airplay_name)"
+    bashio::config.has_value "server.airplay_device_name" && airplay_device_name="$(bashio::config server.airplay_device_name)"
+    bashio::config.has_value "server.airplay_port" && airplay_port="$(bashio::config server.airplay_port)"
+
+    bashio::log.info 'Starting D-Bus and Avahi for AirPlay discovery...'
+
+    # Make sure D-Bus has a machine id and a clean runtime directory
+    dbus-uuidgen --ensure
+    mkdir -p /run/dbus
+    rm -f /run/dbus/pid
+
+    # Start the system bus and the mDNS responder in the background
+    dbus-daemon --system
+    avahi-daemon --daemonize --no-chroot
+
+    sources+=("source = airplay:///usr/bin/shairport-sync?name=$(rawurlencode "$airplay_name")&devicename=$(rawurlencode "$airplay_device_name")&port=${airplay_port}")
+fi
+
+# Compose the snapserver configuration from the enabled sources
+{
+    echo "[stream]"
+
+    for src in "${sources[@]}"; do
+        echo "$src"
+    done
+
+    echo ""
+
+    if bashio::config.true 'server.enable_web'; then
+        echo "[http]"
+        echo "doc_root = /usr/share/snapweb/"
+    fi
+} > "$config_file"
+
+conf="$(cat "$config_file")"
+bashio::log.debug "Snapcast server compiled config file: $conf"
+
+# Remove warnings that happen a lot in the log
+exec > >(fgrep -v ":5353: type 47 is invalid")
+
+# Persist group/stream assignments across restarts in the add-on data volume
+exec /usr/bin/snapserver --server.datadir=/data "${options[@]}" < /dev/null
