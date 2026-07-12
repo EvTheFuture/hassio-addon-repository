@@ -2,24 +2,38 @@ name: Builder
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
       - 'snapcast/**'
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build ${{ matrix.arch }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
+      fail-fast: false
       matrix:
-        arch: [amd64, aarch64, armv7, armhf, i386]
+        arch: [amd64, aarch64]
     steps:
-      - uses: actions/checkout@v4
-      - name: Build for ${{ matrix.arch }}
-        uses: home-assistant/builder@master
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          args: |
-            --target snapcast
-            --arch ${{ matrix.arch }}
-            --docker-hub ghcr.io/EvTheFuture
-            --image-name snapcast
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.arch }}
+        uses: home-assistant/builder@2026.02.1
+        with:
+          args: >-
+            --${{ matrix.arch }}
+            --target /data/snapcast
+            --image "ghcr.io/evthefuture/{arch}-addon-snapcast"
+            --docker-hub-check
