@@ -48,6 +48,12 @@ configuration:
       airplay_device_name:
         name: AirPlay receiver name
         description: Name shown in the AirPlay picker on your iPhone or Mac.
+      airplay_ignore_volume_control:
+        name: AirPlay full volume
+        description: Always feed AirPlay into Snapcast at full volume and set the level with Snapcast clients instead of the iPhone. Turn off to let the Apple device control volume.
+      airplay_default_volume:
+        name: AirPlay default volume (dB)
+        description: Starting volume in dB when the Apple device does not request one, from -30.0 (quietest) to 0.0 (loudest). Only used when full volume is off.
       airplay_port:
         name: AirPlay RTSP port
         description: RTSP listening port for shairport-sync. Default is 5000.

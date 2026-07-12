@@ -88,6 +88,22 @@ if bashio::config.true 'server.enable_stream_airplay'; then
     dbus-daemon --system
     avahi-daemon --daemonize --no-chroot
 
+    # Build the shairport-sync config used by the AirPlay source
+    airplay_ignore_volume="no"
+
+    bashio::config.true 'server.airplay_ignore_volume_control' && airplay_ignore_volume="yes"
+
+    {
+        echo "general = {"
+        echo "    ignore_volume_control = \"${airplay_ignore_volume}\";"
+
+        if bashio::config.has_value 'server.airplay_default_volume'; then
+            echo "    default_airplay_volume = $(bashio::config 'server.airplay_default_volume');"
+        fi
+
+        echo "};"
+    } > /etc/shairport-sync.conf
+
     sources+=("source = airplay:///usr/bin/shairport-sync?name=$(rawurlencode "$airplay_name")&devicename=$(rawurlencode "$airplay_device_name")&port=${airplay_port}")
 fi
 
