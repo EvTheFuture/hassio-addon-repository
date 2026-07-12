@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.8.4]
+* Fix image access
+
 ## [0.8.2]
 * Added AirPlay volume settings
 

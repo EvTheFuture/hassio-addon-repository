@@ -35,5 +35,5 @@ jobs:
           args: >-
             --${{ matrix.arch }}
             --target /data/snapcast
-            --image "ghcr.io/evthefuture/{arch}-addon-snapcast"
+            --image "{arch}-addon-snapcast"
             --docker-hub-check

@@ -1,7 +1,7 @@
 {
   "name": "Snapcast",
-  "version": "0.8.3",
-  "image": "ghcr.io/evthefuture/snapcast",
+  "version": "0.8.4",
+  "image": "ghcr.io/evthefuture/{arch}-addon-snapcast",
   "init": false,
   "stage": "stable",
   "slug": "snapcast",
